@@ -1,7 +1,7 @@
 document.getElementById("formulario").addEventListener("submit", function(e) {
     e.preventDefault();
     const documento = document.getElementById("documento").value.trim();
-    const certificadoUrl = `certificados/${documento}.pdf`;
+    const certificadoUrl = `Certificados/${documento}.pdf`;
     const resultadoDiv = document.getElementById("resultado");
     
     // Verifica si el certificado existe
