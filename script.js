@@ -1,54 +1,50 @@
-document.getElementById("formulario").addEventListener("submit", function(e) {
+document.getElementById("formulario").addEventListener("submit", async function(e) {
     e.preventDefault();
     const documento = document.getElementById("documento").value.trim();
     const resultadoDiv = document.getElementById("resultado");
     
-    // Limpiar mensajes anteriores y resetear estilos
+    // Resetear mensajes
     resultadoDiv.textContent = "";
-    resultadoDiv.style.color = "";
     resultadoDiv.className = "";
-    
-    // Validación básica del documento (solo números, sin espacios)
-    if(!/^\d+$/.test(documento)) {
-        resultadoDiv.textContent = "❌ Por favor ingrese solo números, sin espacios o caracteres especiales";
-        resultadoDiv.style.color = "red";
+
+    // Validación
+    if(!documento || !/^\d+$/.test(documento)) {
+        showError("❌ Ingrese un número de documento válido (solo números)");
         return;
     }
-    
-    // Ruta corregida (nota la C mayúscula en Certificados)
-    const certificadoUrl = `Certificados/${documento}.pdf`;
-    
-    // Verificación mejorada con manejo de errores
-    fetch(certificadoUrl)
-        .then(response => {
+
+    // Prueba ambas rutas (mayúsculas/minúsculas)
+    const rutas = [
+        `Certificados/${documento}.pdf`,  // Primero mayúscula
+        `certificados/${documento}.pdf`    // Luego minúscula
+    ];
+
+    for(const ruta of rutas) {
+        try {
+            const response = await fetch(ruta);
             if(response.ok) {
-                // Opción 1: Abrir en nueva pestaña
-                window.open(certificadoUrl, "_blank");
-                
-                // Opción 2: Forzar descarga (descomentar si prefieres esto)
-                /*
+                // Forzar descarga
                 const link = document.createElement('a');
-                link.href = certificadoUrl;
+                link.href = ruta;
                 link.download = `certificado_${documento}.pdf`;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-                */
                 
-                // Mensaje de éxito
-                resultadoDiv.textContent = "✅ Certificado encontrado. Se está descargando...";
+                resultadoDiv.textContent = "✅ Descargando certificado...";
                 resultadoDiv.style.color = "green";
-            } else if(response.status === 404) {
-                resultadoDiv.textContent = "⚠️ No se encontró certificado para este documento";
-                resultadoDiv.style.color = "orange";
-            } else {
-                resultadoDiv.textContent = "❌ Error al buscar el certificado (Código: " + response.status + ")";
-                resultadoDiv.style.color = "red";
+                return;
             }
-        })
-        .catch(error => {
-            resultadoDiv.textContent = "❌ Error de conexión. Intente nuevamente más tarde.";
-            resultadoDiv.style.color = "red";
-            console.error("Error en la petición:", error);
-        });
+        } catch(error) {
+            console.error(`Error con ruta ${ruta}:`, error);
+        }
+    }
+    
+    showError("⚠️ Certificado no encontrado. Verifique el número");
 });
+
+function showError(mensaje) {
+    const div = document.getElementById("resultado");
+    div.textContent = mensaje;
+    div.style.color = "red";
+}
